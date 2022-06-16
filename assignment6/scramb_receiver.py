@@ -6,15 +6,15 @@ import socket
 import random
 import struct
 import re
+
 from scapy.all import *
 from scapy.all import sendp, send, srp1
 from scapy.all import Packet, hexdump
 from scapy.all import Ether, StrFixedLenField, XByteField, IntField
 from scapy.all import bind_layers
-import readline
 import time
 
-my_key = (0x0000000F)  #.to_bytes(8, byteorder='big')
+my_key = (0xFFFFFFFF)  #.to_bytes(8, byteorder='big')
 
 class P4scramb(Packet):
     name = "P4scramb"
@@ -40,6 +40,19 @@ def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
+def feistel_dec(secret):
+    secret = int.from_bytes(secret,'big')
+    left = secret >> 16
+    right = secret & 65535
+
+    new_right = right
+    new_left = left ^ new_right ^ my_key
+
+    right = new_left
+    left = new_right ^ my_key ^ right
+
+    return hex((left << 16) | right)
+
 def main():
     
     # p = make_seq(num_parser, make_seq(op_parser,num_parser))
@@ -56,9 +69,10 @@ def main():
                 if p4scramb:
                     print((p4scramb.secret)) 
                     # if p4scramb.ver == (1).to_bytes(1,'big'): #decrypt
-                    print((int.from_bytes(p4scramb.secret, 'big') ^ my_key).to_bytes(8,'big'))
+                    # print((int.from_bytes(p4scramb.secret, 'big') ^ my_key).to_bytes(4,'big'))
+                    print(feistel_dec(p4scramb.secret))
                     # print(int.from_bytes(p4scramb.ver, 'big'))
-                    # resp.show()
+                    resp.show()
                 else:
                     print("cannot find P4scramb header in the packet")
             else:

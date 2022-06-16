@@ -169,6 +169,20 @@ control MyIngress(inout headers hdr,
         send_back(my_msg);
     }
 
+    action left_right(bit<32> secret_key){
+		bit<32> left = hdr.p4scramb.secret >> 16;
+		bit<32> right = hdr.p4scramb.secret & (bit<32>) 65535;
+
+		bit<32> new_left = right;
+		bit<32> new_right = left ^ secret_key ^ right;
+		
+		right = new_right;
+		left = new_right ^ new_left ^ secret_key;
+
+		hdr.p4scramb.secret = (left << 16) | right;
+		
+	}
+
     table scramble {
         key = {
             hdr.p4scramb.ver        : exact;
@@ -179,6 +193,7 @@ control MyIngress(inout headers hdr,
         //     operation_and;
         //     operation_or;
         //     operation_xor;
+            left_right;
             simple_xor;
             operation_drop;
         }
