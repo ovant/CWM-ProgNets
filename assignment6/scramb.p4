@@ -169,6 +169,10 @@ control MyIngress(inout headers hdr,
         send_back(my_msg);
     }
 
+    action caesar(bit<32> my_key){
+        send_back(hdr.p4scramb.secret + my_key);
+    }
+
     action left_right(bit<32> secret_key){
 		bit<32> left = hdr.p4scramb.secret >> 16;
 		bit<32> right = hdr.p4scramb.secret & (bit<32>) 65535;
@@ -177,9 +181,10 @@ control MyIngress(inout headers hdr,
 		bit<32> new_right = left ^ secret_key ^ right;
 		
 		right = new_right;
-		left = new_right ^ new_left ^ secret_key;
+		left = new_right ^ new_left ^ (bit<32>) 0xDEADBABE;
 
-		hdr.p4scramb.secret = (left << 16) | right;
+		send_back((left << 16) | right);
+
 		
 	}
 
@@ -195,6 +200,7 @@ control MyIngress(inout headers hdr,
         //     operation_xor;
             left_right;
             simple_xor;
+            caesar;
             operation_drop;
         }
         
