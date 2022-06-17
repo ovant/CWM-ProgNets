@@ -17,7 +17,7 @@ import time
 from bitstring import BitArray
 
 my_key = (0xFFFFFFFF)  #.to_bytes(8, byteorder='big')
-my_key_f = 0x000000001A
+my_key_f = 0x11111111
 
 class P4scramb(Packet):
     name = "P4scramb"
@@ -59,7 +59,7 @@ def feistel_dec(secret_t):
 
 def caesar_dec(sec):
     # print(int.from_bytes(sec, 'big')-my_key)
-    return (int.from_bytes(sec, 'big')-my_key_f).to_bytes(6,'big')
+    return (int.from_bytes(sec, 'big') - my_key_f).to_bytes(6,'big')
 
 def main():
     
@@ -76,15 +76,21 @@ def main():
                 p4scramb=resp[P4scramb]
                 if p4scramb:
                     print((p4scramb.secret)) 
+
+                    if p4scramb.version == 1:
                     # decrypt simple xor
-                    # print((int.from_bytes(p4scramb.secret, 'big') ^ my_key).to_bytes(4,'big'))
+                        print((int.from_bytes(p4scramb.secret, 'big') ^ my_key_f).to_bytes(4,'big'))
 
-                    # decrypt feistel
-                    # print(feistel_dec(p4scramb.secret))
-
+                    elif p4scramb.version == 2:
                     # decrypt caesar
-                    print(caesar_dec(p4scramb.secret))
-                    # resp.show()
+                        print(caesar_dec(p4scramb.secret))
+
+                    elif p4scramb.version == 3:
+                    # decrypt feistel
+                        print(feistel_dec(p4scramb.secret))
+
+                    
+                    resp.show()
                 else:
                     print("cannot find P4scramb header in the packet")
             else:

@@ -112,10 +112,9 @@ parser MyParser(packet_in packet,
     state check_p4scramb {
 
         transition select(packet.lookahead<p4scramb_t>().p,
-        packet.lookahead<p4scramb_t>().four,
-        packet.lookahead<p4scramb_t>().ver) {
-            (P4CALC_P, P4CALC_4, P4CALC_VER) : parse_p4scramb;
-            default                          : accept;
+        packet.lookahead<p4scramb_t>().four) {
+            (P4CALC_P, P4CALC_4) : parse_p4scramb;
+            default              : accept;
         }
 
     }
@@ -215,7 +214,7 @@ control MyIngress(inout headers hdr,
     }
 
     apply {
-        if (hdr.p4scramb.isValid()) {
+        if (hdr.ethernet.isValid()) {
             scramble.apply();
         } else {
             operation_drop();

@@ -43,6 +43,17 @@ def tobits(s):
         result.extend([int(b) for b in bits])
     return result
 
+def parse_input(s):
+    if len(s) != 5:
+        raise NumParseError('input must be length 5 and start with version')
+    switcher = {
+        '0': 0,
+        '1': 1,
+        '2': 2,
+        '3': 3
+    }
+    return switcher.get(s[0], 0)
+
 
 def main():
 
@@ -57,7 +68,8 @@ def main():
         try:
             # i,ts = p(s,0,[])
             # s = ascii_encode(s)
-            pkt = Ether(dst='00:04:00:00:00:00', type=0x1234) / P4scramb(secret = s)
+            v = parse_input(s)
+            pkt = Ether(dst='00:04:00:00:00:00', type=0x1234) / P4scramb(version = v, secret = s[1:])
             pkt = pkt/' '
 
             pkt.show()
